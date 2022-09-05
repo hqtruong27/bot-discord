@@ -1,0 +1,30 @@
+{
+  "name": "bot-discord",
+  "version": "1.0.0",
+  "description": "try create sample bot discord for some of my hobbies",
+  "main": "server.js",
+  "author": "Truonghq",
+  "license": "MIT",
+  "type": "module",
+  "bin": "./app.js",
+  "scripts": {
+    "dev": "nodemon --require dotenv/config --experimental-fetch --trace-warnings --experimental-modules --es-module-specifier-resolution=node ./app.js",
+    "build": "npm pack  --pack-destination dist && start dist",
+    "start": "pm2 start ./app.js --node-args=\"--require dotenv/config --experimental-fetch --experimental-modules --es-module-specifier-resolution=node\"",
+    "restart": "pm2 update ./app.js --node-args=\"--require dotenv/config --experimental-fetch --experimental-modules --es-module-specifier-resolution=node\"",
+    "stop": "pm2 stop ./app.js",
+    "watch": "pm2 list"
+  },
+  "dependencies": {
+    "cron": "^2.1.0",
+    "discord.js": "^14.3.0",
+    "dotenv": "^16.0.2",
+    "express": "^4.18.1"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.18.10",
+    "@babel/core": "^7.18.13",
+    "@babel/preset-env": "^7.18.10",
+    "nodemon": "^2.0.19"
+  }
+}
