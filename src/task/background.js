@@ -1,5 +1,5 @@
 import { CronJob } from 'cron'
-import DiscordService from '../services/discordService'
+import DiscordService from '../services/discordService.js'
 
 export default class BackgroundTask {
     static schedule = (cronExpression, callback) => {

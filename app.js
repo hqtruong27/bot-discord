@@ -2,9 +2,9 @@ import express from 'express'
 import https from 'https'
 import fs from 'fs'
 import bodyParser from 'body-parser'
-import './src/services/discordService'
-import './src/task/background'
-import QuotesService from './src/services/quotesService'
+import './src/services/discordService.js'
+import './src/task/background.js'
+import QuotesService from './src/services/quotesService.js'
 
 const PORT = parseInt(process.env.PORT) || 3000
 const HOST = process.env.HOST || '127.0.0.1'
@@ -33,3 +33,6 @@ app.get('/quotes', async (req, res) => {
     const response = await QuotesService.random()
     res.status(200).json(response)
 })
+const thisIsFunc = () => {
+
+}

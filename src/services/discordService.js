@@ -1,5 +1,5 @@
-import '../common/discord-helper'
-import QuotesService from './quotesService'
+import '../common/discord-helper.js'
+import QuotesService from './quotesService.js'
 import { Routes, REST, Client, GatewayIntentBits, ActivityType } from 'discord.js'
 const client = new Client({
     intents: [
@@ -106,7 +106,7 @@ const rest = new REST({ version: '10' }).setToken(process.env.TOKEN_DISCORD);
 client.once('ready', async () => {
     console.log('Ready! 🌸🌸🌸')
     client.user.setStatus('idle')
-    client.user.setActivity("github.com/hqtruong27", {
+    client.user.setActivity("https://github.com/hqtruong27", {
         type: ActivityType.Playing,
         url: "https://github.com/hqtruong27"
     })
@@ -151,10 +151,22 @@ client.on('messageCreate', async (message) => {
 
     if (!content.startsWith('!')) return
 
-    const messages = await channel.messages.fetch({ limit: 2 })
-    const { author } = messages.last()
+    // const messages = await channel.messages.fetch({ limit: 2 })
+    // console.log({ messages })
+    // const lastMessage = messages.last()
 
-    if (author.id == message.author.id) {
+    // if (lastMessage.author.id == message.author.id && lastMessage.content == content) {
+    //     await channel.send('so fast wait for 5s!')
+    //     return
+    // }
+    const filter_msg = msg => msg.content == content && msg.author == message.author
+    const msgs = await channel.awaitMessages({
+        filter: filter_msg,
+        time: 4000
+    })
+
+    console.log(msgs)
+    if (msgs.size > 0) {
         await channel.send('so fast wait for 5s!')
         return
     }
