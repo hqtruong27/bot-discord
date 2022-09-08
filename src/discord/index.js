@@ -9,6 +9,8 @@ import {
     GatewayIntentBits,
     ActivityType
 } from 'discord.js'
+import { BackgroundTask } from '../task/background'
+import QuotesService from '../services/quotesService';
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const prefix = '!'
@@ -31,32 +33,6 @@ for (const file of commandFiles) {
     const { commands } = client
     command.data.map(x => commands.set(x.name, command))
 }
-const commands = [
-    {
-        name: 'ping',
-        description: 'Replies with Pong!',
-    },
-    {
-        name: 'quotes',
-        description: 'Replied a quotes from api',
-    },
-    {
-        name: 'q',
-        description: 'Replied a quotes from api',
-    },
-    {
-        name: 'quotes-anime',
-        description: 'Replied a quotes from api',
-    },
-    {
-        name: 'q-a',
-        description: 'Replied a quotes from api',
-    },
-    {
-        name: 'image',
-        description: 'Replied a random image',
-    },
-]
 
 client.login(process.env.TOKEN_DISCORD)
 client.once('ready', async () => {
@@ -67,6 +43,11 @@ client.once('ready', async () => {
         url: "https://github.com/hqtruong27"
     })
 })
+
+BackgroundTask.schedule(
+    '* */8 * * * *',
+    async () => await discord.sendRandomQuotesToChannel()
+)
 
 client.on('interactionCreate', async (interaction) => {
     if (!interaction.isChatInputCommand()) return
@@ -98,4 +79,67 @@ client.on('messageCreate', async (message) => {
     await command.execute(message, prefix)
 })
 
-export default client
+export const discord = {
+    buildQuotes: async (channel) => {
+        await channel.sendTyping()
+        const data = await QuotesService.random()
+
+        if (!data) return false
+        const { content, author } = data
+        channel.send(`${content} - ${`${author}`.toString('bold')}`.toString('italic'))
+        return true
+    },
+
+    buildQuotesAnime: async (channel) => {
+        await channel.sendTyping()
+        const data = await QuotesService.randomAnime()
+        if (data) {
+            let {
+                quote,
+                anime,
+                character
+            } = data
+
+            channel.send(`${quote} - ${`${character}`.toString('bold')}\n\n --__${anime}__--`.toString('italic'))
+            return true
+        }
+
+        return false
+    },
+
+    sendRandomQuotesToChannel: async () => {
+        if (!client.isReady()) {
+            console.log('bot not login')
+            return
+        }
+
+        const arr = ['quotes', 'quotes-anime']
+        let success = false
+        while (!success) {
+            const random = Math.floor(Math.random() * arr.length)
+            const randomText = arr[random]
+            console.log(random)
+            arr.splice(random, 1)
+            console.log(`Remaining: ${JSON.stringify(arr)} \n`)
+            const channels = client.channels.cache.filter(x => x.name === 'chung')
+            if (channels) {
+                for (const [_, channel] of channels) {
+                    switch (randomText) {
+                        case 'quotes':
+                            success = await discord.buildQuotes(channel)
+                            break
+                        case 'quotes-anime':
+                            success = await discord.buildQuotesAnime(channel)
+                        default:
+                            success = true
+                            break
+                    }
+                }
+            }
+        }
+
+        console.log('send quotes to channel success!!')
+    }
+}
+
+

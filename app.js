@@ -2,7 +2,7 @@ import express from 'express'
 import https from 'https'
 import fs from 'fs'
 import bodyParser from 'body-parser'
-import './src/loaders'
+import './src/discord'
 import QuotesService from './src/services/quotesService.js'
 
 const PORT = parseInt(process.env.PORT) || 3000
