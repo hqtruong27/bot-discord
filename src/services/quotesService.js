@@ -1,13 +1,13 @@
-import { QUOTES } from '../common/constants.js'
+import { ANIME_CHAN, QUOTABLE } from '../common/constants.js'
 export default class QuotesService {
     static random = async () =>
-        fetch(QUOTES.QUOTABLE_URL + '/random')
+        fetch(QUOTABLE.API_URL + '/random')
             .then(response => response.json())
             .then(data => data)
             .catch(err => err)
 
     static randomAnime = async () =>
-        fetch(QUOTES.ANIME_CHAN_URL + '/random')
+        fetch(ANIME_CHAN.API_URL + '/random')
             .then(response => response.json())
             .then(data => data)
             .catch(err => err)

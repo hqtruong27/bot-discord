@@ -1,7 +1,14 @@
-String.prototype.textBold = function () {
-    return '**' + this + '**'
-}
+String.prototype.toString = function (...formats) {
+    if (!formats) return this
 
-String.prototype.textItalic = function () {
-    return '*' + this + '*'
+    for (const format of formats) {
+        switch (format) {
+            case 'italic':
+                return '*' + this + '*'
+            case 'bold':
+                '**' + this + '**'
+            default:
+                return this
+        }
+    }
 }

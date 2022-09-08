@@ -153,54 +153,15 @@ client.on('interactionCreate', async (interaction) => {
 })
 
 client.on('messageCreate', async (message) => {
-    let {
-        content,
-        channel,
-        command = content.substring(1),
-    } = message
 
+    let { content, channel, } = message
     if (!content.startsWith(prefix) || message.author.bot) return
 
-    // const messages = await channel.messages.fetch({ limit: 2 })
-    // console.log({ messages })
-    // const lastMessage = messages.last()
+    const args = content.slice(prefix.length).split(/ +/)
+    const command = args.shift().toLowerCase()
 
-    // if (lastMessage.author.id == message.author.id && lastMessage.content == content) {
-    //     await channel.send('so fast wait for 5s!')
-    //     return
-    // }
-    const filter_msg = msg => msg.content == content && msg.author == message.author
-    const msgs = await channel.awaitMessages({
-        filter: filter_msg,
-        time: 4000
-    })
 
-    console.log(msgs)
-    if (msgs.size > 0) {
-        await channel.send('so fast wait for 5s!')
-        return
-    }
+    if (!client.commands.get(command)) return
 
-    switch (command) {
-        case 'ping':
-            {
-                await channel.sendTyping()
-                await channel.send('Pong!')
-                break
-            }
-        case 'q':
-        case 'quotes':
-            {
-                await DiscordService.buildQuotes(channel)
-                break
-            }
-        case 'q-a':
-        case 'quotes-anime':
-            {
-                await DiscordService.buildQuotesAnime(channel)
-                break
-            }
-        default:
-            break
-    }
+    client.commands.get(command).execute(message)
 })
