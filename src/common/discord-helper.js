@@ -6,7 +6,7 @@ String.prototype.toString = function (...formats) {
             case 'italic':
                 return '*' + this + '*'
             case 'bold':
-                '**' + this + '**'
+                return '**' + this + '**'
             default:
                 return this
         }

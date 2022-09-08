@@ -1,6 +1,6 @@
 import { CronJob } from 'cron'
-import DiscordService from '../services/discordService.js'
-
+import client from '../discord'
+import DiscordService from '../services/discordService'
 export default class BackgroundTask {
     static schedule = (cronExpression, callback) => {
         const job = new CronJob(
@@ -16,6 +16,6 @@ export default class BackgroundTask {
 }
 
 BackgroundTask.schedule(
-    '0 8 * * *',
-    async () => await DiscordService.sendRandomQuotesToChannel()
+    '* */8 * * * *',
+    async () => await DiscordService.sendRandomQuotesToChannel(client)
 )

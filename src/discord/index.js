@@ -1,8 +1,19 @@
+import './deploy-commands'
 import '../common/discord-helper.js'
-import QuotesService from './quotesService.js'
-import { Routes, REST, Client, GatewayIntentBits, ActivityType } from 'discord.js'
+import fs from 'node:fs'
+import { fileURLToPath } from 'url'
+import { join, dirname } from 'node:path'
+import {
+    Client,
+    Collection,
+    GatewayIntentBits,
+    ActivityType
+} from 'discord.js'
 
+const __dirname = dirname(fileURLToPath(import.meta.url))
 const prefix = '!'
+const path = './commands/'
+
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
@@ -12,6 +23,14 @@ const client = new Client({
     ]
 })
 
+client.commands = new Collection()
+
+const commandFiles = fs.readdirSync(join(__dirname, path)).filter(file => file.endsWith('.js'))
+for (const file of commandFiles) {
+    const command = await import(`${path + file}`)
+    const { commands } = client
+    command.data.map(x => commands.set(x.name, command))
+}
 const commands = [
     {
         name: 'ping',
@@ -38,81 +57,8 @@ const commands = [
         description: 'Replied a random image',
     },
 ]
-export default class DiscordService {
-    static buildQuotes = async (channel) => {
-        await channel.sendTyping()
-        const data = await QuotesService.random()
 
-        if (!data) return false
-        const { content, author } = data
-        channel.send(`${content} - ${`${author}`.toString('bold')}`.toString('italic'))
-        return true
-    }
-
-    static buildQuotesAnime = async (channel) => {
-        await channel.sendTyping()
-        const data = await QuotesService.randomAnime()
-        if (data) {
-            let {
-                quote,
-                anime,
-                character
-            } = data
-
-            channel.send(`${quote} - ${`${character}`.toString('bold')}\n\n --__${anime}__--`.toString('italic'))
-            return true
-        }
-
-        return false
-    }
-
-    static sendRandomQuotesToChannel = async () => {
-        if (!client.isReady()) {
-            console.log('bot not login')
-            return
-        }
-
-        const arr = ['quotes', 'quotes-anime']
-        let success = false
-        while (!success) {
-            const random = Math.floor(Math.random() * arr.length)
-            const randomText = arr[random]
-            console.log(random)
-            arr.splice(random, 1)
-            console.log(`Remaining: ${JSON.stringify(arr)} \n`)
-            const channel = client.channels.cache.find(x => x.name === 'chung')
-            if (channel) {
-                switch (randomText) {
-                    case 'quotes':
-                        success = await this.buildQuotes(channel)
-                        break
-                    case 'quotes-anime':
-                        success = await this.buildQuotesAnime(channel)
-                    default:
-                        success = true
-                        break
-                }
-            }
-        }
-
-        console.log('send quotes to channel success!!')
-    }
-}
-
-const rest = new REST({ version: '10' }).setToken(process.env.TOKEN_DISCORD);
-
-(async () => {
-    try {
-        console.log('Started refreshing application (/) commands.')
-
-        await rest.put(Routes.applicationCommands(process.env.CLIENT_ID), { body: commands })
-
-        console.log('Successfully reloaded application (/) commands.')
-    } catch (error) {
-        console.error(error)
-    }
-})()
-
+client.login(process.env.TOKEN_DISCORD)
 client.once('ready', async () => {
     console.log('Ready! 🌸🌸🌸')
     client.user.setStatus('idle')
@@ -122,46 +68,34 @@ client.once('ready', async () => {
     })
 })
 
-client.login(process.env.TOKEN_DISCORD)
-
 client.on('interactionCreate', async (interaction) => {
     if (!interaction.isChatInputCommand()) return
 
-    const { commandName, channel } = interaction
-    switch (commandName) {
-        case 'ping':
-            {
-                await channel.sendTyping()
-                await interaction.reply('Pong!')
-                break
-            }
-        case 'q':
-        case 'quotes':
-            {
-                await DiscordService.buildQuotes(channel)
-                break
-            }
-        case 'q-a':
-        case 'quotes-anime':
-            {
-                await DiscordService.buildQuotesAnime(channel)
-                break
-            }
-        default:
-            break
+    const command = client.commands.get(interaction.commandName)
+    if (!command) return
+
+    try {
+        await command.execute(interaction, null)
+    } catch (error) {
+        console.error(error)
+        await interaction.reply({
+            ephemeral: true,
+            content: 'There was an error while executing this command!',
+        })
     }
 })
 
 client.on('messageCreate', async (message) => {
-
-    let { content, channel, } = message
-    if (!content.startsWith(prefix) || message.author.bot) return
+    const { content, author } = message
+    if (!content.startsWith(prefix) || author.bot) return
 
     const args = content.slice(prefix.length).split(/ +/)
-    const command = args.shift().toLowerCase()
+    const commandName = args.shift().toLowerCase()
 
+    const command = client.commands.get(commandName)
+    if (!command) return
 
-    if (!client.commands.get(command)) return
-
-    client.commands.get(command).execute(message)
+    await command.execute(message, prefix)
 })
+
+export default client
