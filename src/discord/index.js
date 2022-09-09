@@ -9,8 +9,7 @@ import {
     GatewayIntentBits,
     ActivityType
 } from 'discord.js'
-import { BackgroundTask } from '../task/background'
-import QuotesService from '../services/quotesService';
+import QuotesService from '../services/quotesService'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const prefix = '!'
@@ -43,11 +42,6 @@ client.once('ready', async () => {
         url: "https://github.com/hqtruong27"
     })
 })
-
-BackgroundTask.schedule(
-    '* */8 * * * *',
-    async () => await discord.sendRandomQuotesToChannel()
-)
 
 client.on('interactionCreate', async (interaction) => {
     if (!interaction.isChatInputCommand()) return
@@ -123,23 +117,24 @@ export const discord = {
             console.log(`Remaining: ${JSON.stringify(arr)} \n`)
             const channels = client.channels.cache.filter(x => x.name === 'chung')
             if (channels) {
-                for (const [_, channel] of channels) {
-                    switch (randomText) {
-                        case 'quotes':
-                            success = await discord.buildQuotes(channel)
-                            break
-                        case 'quotes-anime':
-                            success = await discord.buildQuotesAnime(channel)
-                        default:
-                            success = true
-                            break
-                    }
-                }
+                await Promise.all(
+                    channels.map(async (channel) => {
+                        //const msgs = (await channel.messages.fetch()).filter(x => x.author.id == client.user.id)
+                        switch (randomText) {
+                            case 'quotes':
+                                success = await discord.buildQuotes(channel)
+                                break
+                            case 'quotes-anime':
+                                success = await discord.buildQuotesAnime(channel)
+                            default:
+                                success = true
+                                break
+                        }
+                    })
+                )
             }
         }
 
         console.log('send quotes to channel success!!')
     }
 }
-
-

@@ -12,12 +12,19 @@ const commandFiles = fs.readdirSync(join(__dirname, path)).filter(file => file.e
 const rest = new REST({ version: '10' }).setToken(process.env.TOKEN_DISCORD);
 (async function () {
     try {
-        for (const file of commandFiles) {
-            const command = await import(`${path + file}`)
-            const { data } = command
 
-            if (data) data.map(x => commands.push(x))
-        }
+        (await Promise.all(
+            commandFiles.map(
+                async file => await import(`${path + file}`)
+            )
+        ))
+            .map(x => {
+                const { data } = { ...x }
+                if (data)
+                    data.map(
+                        x => commands.push(x)
+                    )
+            })
 
         console.log('Started refreshing application commands.')
 

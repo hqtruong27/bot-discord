@@ -1,8 +1,14 @@
 import { CronJob } from 'cron'
+import { discord } from '../discord'
 export const BackgroundTask = {
-    schedule: (cronExpression, callback) => {
+    /**
+     *
+     * @param {String} cronTime
+     * @param {Function} callback
+     */
+    schedule: (cronTime, callback) => {
         const job = new CronJob(
-            cronExpression,
+            cronTime,
             callback,
             null,
             false,
@@ -12,3 +18,8 @@ export const BackgroundTask = {
         job.start()
     }
 }
+
+BackgroundTask.schedule(
+    '0 10 * * *',
+    async () => await discord.sendRandomQuotesToChannel()
+)
