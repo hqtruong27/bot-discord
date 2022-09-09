@@ -16,6 +16,7 @@
     "watch": "pm2 list"
   },
   "dependencies": {
+    "@discordjs/voice": "^0.11.0",
     "axios": "^0.27.2",
     "cron": "^2.1.0",
     "discord.js": "^14.3.0",

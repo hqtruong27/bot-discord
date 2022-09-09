@@ -26,12 +26,21 @@ const client = new Client({
 
 client.commands = new Collection()
 
-const commandFiles = fs.readdirSync(join(__dirname, path)).filter(file => file.endsWith('.js'))
-for (const file of commandFiles) {
-    const command = await import(`${path + file}`)
-    const { commands } = client
-    command.data.map(x => commands.set(x.name, command))
-}
+const commandFiles = fs.readdirSync(join(__dirname, path)).filter(file => file.endsWith('.js'));
+
+(await Promise.all(
+    commandFiles.map(
+        async file => await import(`${path + file}`)
+    )
+))
+    .map(command => {
+        const { data } = { ...command }
+        if (data)
+            data.map(
+                x => client.commands.set(x.name, command)
+            )
+    })
+
 
 client.login(process.env.TOKEN_DISCORD)
 client.once('ready', async () => {
