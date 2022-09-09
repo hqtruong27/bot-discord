@@ -50,7 +50,7 @@ client.on('interactionCreate', async (interaction) => {
     if (!command) return
 
     try {
-        await command.execute(interaction, null)
+        await command.execute(interaction)
     } catch (error) {
         console.error(error)
         await interaction.reply({
@@ -70,7 +70,7 @@ client.on('messageCreate', async (message) => {
     const command = client.commands.get(commandName)
     if (!command) return
 
-    await command.execute(message, prefix)
+    await command.execute(message, prefix, args[0])
 })
 
 export const discord = {
