@@ -9,7 +9,12 @@ import {
     GatewayIntentBits,
     ActivityType
 } from 'discord.js'
+import {
+    createAudioPlayer,
+    NoSubscriberBehavior,
+} from '@discordjs/voice'
 import QuotesService from '../services/quotesService'
+import { Player } from 'discord-player'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const prefix = '!'
@@ -20,11 +25,18 @@ const client = new Client({
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.DirectMessages,
-        GatewayIntentBits.MessageContent
+        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.GuildVoiceStates
     ]
 })
 
 client.commands = new Collection()
+// client.queue = new Collection()
+client.player = createAudioPlayer({
+    behaviors: {
+        noSubscriber: NoSubscriberBehavior.Pause,
+    },
+})
 
 const commandFiles = fs.readdirSync(join(__dirname, path)).filter(file => file.endsWith('.js'));
 
@@ -40,7 +52,6 @@ const commandFiles = fs.readdirSync(join(__dirname, path)).filter(file => file.e
                 x => client.commands.set(x.name, command)
             )
     })
-
 
 client.login(process.env.TOKEN_DISCORD)
 client.once('ready', async () => {
@@ -79,7 +90,10 @@ client.on('messageCreate', async (message) => {
     const command = client.commands.get(commandName)
     if (!command) return
 
-    await command.execute(message, prefix, args[0])
+    message.prefix = prefix
+    message.query = args?.join(' ')
+    message.commandName = commandName
+    await command.execute(message, client.player)
 })
 
 export const discord = {

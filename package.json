@@ -16,12 +16,18 @@
     "watch": "pm2 list"
   },
   "dependencies": {
+    "@discordjs/opus": "^0.8.0",
     "@discordjs/voice": "^0.11.0",
     "axios": "^0.27.2",
     "cron": "^2.1.0",
+    "discord-player": "^5.3.1",
     "discord.js": "^14.3.0",
     "dotenv": "^16.0.2",
-    "express": "^4.18.1"
+    "express": "^4.18.1",
+    "ffmpeg-static": "^5.1.0",
+    "got": "^12.4.1",
+    "libsodium-wrappers": "^0.7.10",
+    "play-dl": "^1.9.5"
   },
   "devDependencies": {
     "nodemon": "^2.0.19"
