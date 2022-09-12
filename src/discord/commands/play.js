@@ -136,9 +136,16 @@ export const execute = async (interaction, player) => {
         adapterCreator: interaction.guild.voiceAdapterCreator
     })
 
-
     switch (commandName) {
         case 'play':
+            if (!interaction.member.voice.channelId) {
+                return interaction.channel.send('please join a voice channel.')
+            }
+
+            if (!query) {
+                return interaction.channel.send('Please enter song name or link youtube.')
+            }
+
             await play(player, connection, interaction)
             break
     }
@@ -165,8 +172,7 @@ const play = async (player, connection, interaction) => {
     })
 
     const video = videos[0] ?? null
-    const queueServer = queue.get(interaction.guildId)
-    console.log({ queueServer })
+    const queueServer = queue.get(interaction.guildId) ?? { songs: [], playing: false }
     if (video) {
         const { url, title } = video
 
@@ -175,42 +181,45 @@ const play = async (player, connection, interaction) => {
             url: url
         }
 
+        if (!queueServer.playing) {
+            queueServer.songs.push(song)
 
-
-
-
-        if (!queueServer) {
-            queue.set(interaction.guildId, {
-                songs: [song]
-            })
-
-            const { songs } = queue.get(interaction.guildId)
-            song = songs.shift()
             const yt = await stream(song.url, {
                 discordPlayerCompatibility: true
             })
 
             const resource = await probeAndCreateResource(yt.stream)
-
             player.play(resource)
             connection.subscribe(player)
-
-            player.on(AudioPlayerStatus.Playing, async (o, n) => {
-                console.log('isPlaying', { o, n })
-                await interaction.channel.send("Now playing: " + song.title)
-            })
-
+            // player.on(AudioPlayerStatus.Playing, async () => {
+            //     queueServer.playing = true
+            //     await interaction.channel.send("Now playing: " + song.title)
+            // })
 
             player.on('stateChange', async (oldState, newState) => {
-                console.log({ oldState, newState })
                 if (newState.status === AudioPlayerStatus.Idle) {
+                    console.log('next song')
+                    queueServer.playing = false
                     await play(player, connection, interaction)
                 }
+                if (oldState.status !== AudioPlayerStatus.Idle && newState.status === AudioPlayerStatus.Idle) {
+                    if (!queueServer.pause) {
+                        console.log('finish')
+                        queueServer.playing = false
+                    }
+                }
+                if (newState.status === AudioPlayerStatus.Playing) {
+                    console.log('playing')
+                    queueServer.playing = true
+                    await interaction.channel.send("Now playing: " + song.title)
+                }
             })
+            queue.set(interaction.guildId, queueServer)
         }
         else {
             queueServer.songs.push(song)
-           // console.log('new song added to collection:', { song })
+            queue.set(interaction.guildId, queueServer)
+            console.log({ queueServer })
         }
     }
 }
